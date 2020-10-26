@@ -1,0 +1,62 @@
+---
+version: "3"
+networks:
+        main:
+                driver: bridge
+                ipam:
+                        config:
+                                - subnet: 172.25.255.0/24
+                        driver: default
+services:
+        nats-1:
+                image: "nats:latest"
+                restart: always
+                command:
+                        - "-D"
+                expose:
+                        - "6222"
+                        - "5222"
+                networks:
+                        main:
+                                ipv4_address: ${NATS_1_IP}
+                ports:
+                        - "${NATS_1_PORT}:4222"
+                        - "5222:5222"
+        
+        streamer:
+                image: "streamer:latest"
+                restart: always
+                build:
+                        dockerfile: streamer/Dockerfile
+                        context: .
+                environment:
+                        NATS_SERVER: "${NATS_1_IP}:${NATS_1_PORT}"
+                        TWEETER_API_CONSUMER_KEY: "${TWEETER_API_CONSUMER_KEY}"
+                        TWEETER_API_CONSUMER_KEY_SECRET: "${TWEETER_API_CONSUMER_KEY_SECRET}"
+                        TWEETER_API_ACCESS_TOKEN: "${TWEETER_API_ACCESS_TOKEN}"
+                        TWEETER_API_ACCESS_TOKEN_SECRET: "${TWEETER_API_ACCESS_TOKEN_SECRET}"
+
+                security_opt:
+                        - seccomp:unconfined
+                cap_add:
+                        - SYS_PTRACE
+                depends_on:
+                        - nats-1
+                command: "./streamer"
+                networks:
+                        main:
+
+        client:
+                image: "client:latest"
+                restart: always
+                build:
+                        dockerfile: client/Dockerfile
+                        context: .
+                environment:
+                        NATS_SERVER: "${NATS_1_IP}:${NATS_1_PORT}"
+                depends_on:
+                        - nats-1
+                command: "./client"
+                networks:
+                        main:
+
