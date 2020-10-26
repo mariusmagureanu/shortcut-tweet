@@ -13,8 +13,12 @@ The project is split into two components. One handling the tweet feed and distri
  
 
     $ make
+    
+ if on MacOS:
+ 
+    $ make osxbuild
   
- This will create a ``bin`` folder under both the ``streamer`` and ``client`` folders containing the appropriate binaries
+ This will create a ``bin`` folder under both the ``streamer`` and ``client`` folders containing the appropriate binaries.
 
 ## Usage
 
